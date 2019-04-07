@@ -104,4 +104,28 @@ public class AddProductCommandHandlerTest {
 
         verify(reservation, times(2)).add(product, 5);
     }
+
+    @Test public void testShouldReturnThatReservationRepositoryMethodsLoadAndSaveWereCalledOnce() {
+
+        AddProductCommand addProductCommand = new AddProductCommand(new Id("1"), new Id("1"), 5);
+
+        Product product = new Product(new Id("2"), new Money(10), "Bread",
+                ProductType.FOOD);
+
+        when(reservation.getClientData()).thenReturn(new ClientData(new Id("1"), "Piotrek"));
+        when(reservation.getCreateDate()).thenReturn(new Date());
+        when(reservation.getStatus()).thenReturn(Reservation.ReservationStatus.OPENED);
+
+
+        Whitebox.setInternalState(addProductCommandHandler, "reservationRepository", reservationRepository);
+        when(reservationRepository.load(any(Id.class))).thenReturn(reservation);
+
+        Whitebox.setInternalState(addProductCommandHandler, "productRepository", productRepository);
+        when(productRepository.load(any(Id.class))).thenReturn(product);
+
+        addProductCommandHandler.handle(addProductCommand);
+
+        verify(reservationRepository, times(1)).load(new Id("1"));
+        verify(reservationRepository, times(1)).save(reservation);
+    }
 }
