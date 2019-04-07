@@ -36,4 +36,26 @@ public class BookKeeperTest {
 
         assertThat(invoiceResult.getItems().size(), is(1));
     }
+
+    @Test public void testCalculateTaxShouldBeCalledTwoTimes() {
+        Id id = new Id("2");
+        ClientData client = new ClientData(id, "Piotr");
+        InvoiceRequest invoiceRequest = new InvoiceRequest(client);
+        BookKeeper bookKeeper = new BookKeeper(new InvoiceFactory());
+
+        TaxPolicy taxPolicy = mock(TaxPolicy.class);
+        when(taxPolicy.calculateTax(ProductType.STANDARD, new Money(10) ))
+                .thenReturn(new Tax(new Money(10), "10%" ));
+
+        ProductData productData = mock(ProductData.class);
+        when(productData.getType()).thenReturn(ProductType.STANDARD);
+
+        RequestItem requestItem = new RequestItem(productData, 10, new Money(10));
+        invoiceRequest.add(requestItem);
+        invoiceRequest.add(requestItem);
+
+        Invoice invoiceResult = bookKeeper.issuance(invoiceRequest, taxPolicy);
+
+        verify(taxPolicy, times(2)).calculateTax(ProductType.STANDARD, new Money(10));
+    }
 }
