@@ -18,8 +18,7 @@ import java.util.Date;
 
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class AddProductCommandHandlerTest {
 
@@ -79,5 +78,30 @@ public class AddProductCommandHandlerTest {
         addProductCommandHandler.handle(addProductCommand);
 
         assertThat(reservation.getClientData().getAggregateId(), Matchers.is(new Id("1")));
+    }
+
+    @Test public void testShouldReturnThatMethodAddWasCalledTwice() {
+
+        AddProductCommand addProductCommand = new AddProductCommand(new Id("1"), new Id("2"), 5);
+        AddProductCommand addProductCommand2 = new AddProductCommand(new Id("3"), new Id("4"), 5);
+
+        Product product = new Product(new Id("2"), new Money(10), "Bread",
+                ProductType.FOOD);
+
+        when(reservation.getClientData()).thenReturn(new ClientData(new Id("1"), "Piotrek"));
+        when(reservation.getCreateDate()).thenReturn(new Date());
+        when(reservation.getStatus()).thenReturn(Reservation.ReservationStatus.OPENED);
+
+
+        Whitebox.setInternalState(addProductCommandHandler, "reservationRepository", reservationRepository);
+        when(reservationRepository.load(any(Id.class))).thenReturn(reservation);
+
+        Whitebox.setInternalState(addProductCommandHandler, "productRepository", productRepository);
+        when(productRepository.load(any(Id.class))).thenReturn(product);
+
+        addProductCommandHandler.handle(addProductCommand);
+        addProductCommandHandler.handle(addProductCommand2);
+
+        verify(reservation, times(2)).add(product, 5);
     }
 }
