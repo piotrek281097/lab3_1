@@ -103,4 +103,22 @@ public class BookKeeperTest {
 
         assertThat(invoiceResult.getItems().get(1).getProduct().getType(), org.hamcrest.Matchers.is(ProductType.DRUG));
     }
+
+    @Test public void testCalculateTaxBeCalledZeroTimes() {
+        Id id = new Id("1");
+        ClientData client = new ClientData(id, "Piotr");
+        InvoiceRequest invoiceRequest = new InvoiceRequest(client);
+        BookKeeper bookKeeper = new BookKeeper(new InvoiceFactory());
+
+        TaxPolicy taxPolicy = mock(TaxPolicy.class);
+        when(taxPolicy.calculateTax(ProductType.FOOD, new Money(10) ))
+                .thenReturn(new Tax(new Money(10), "10%" ));
+
+        ProductData productData = mock(ProductData.class);
+        when(productData.getType()).thenReturn(ProductType.FOOD);
+
+        Invoice invoiceResult = bookKeeper.issuance(invoiceRequest, taxPolicy);
+
+        verify(taxPolicy, times(0)).calculateTax(ProductType.FOOD, new Money(10));
+    }
 }
