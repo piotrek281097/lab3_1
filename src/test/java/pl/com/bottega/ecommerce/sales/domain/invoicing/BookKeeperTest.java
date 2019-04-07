@@ -121,4 +121,25 @@ public class BookKeeperTest {
 
         verify(taxPolicy, times(0)).calculateTax(ProductType.FOOD, new Money(10));
     }
+
+    @Test public void testProductDataGetTypeShouldBeCalledOnce() {
+        Id id = new Id("1");
+        ClientData client = new ClientData(id, "Piotrek");
+        InvoiceRequest invoiceRequest = new InvoiceRequest(client);
+        BookKeeper bookKeeper = new BookKeeper(new InvoiceFactory());
+
+        TaxPolicy taxPolicy = mock(TaxPolicy.class);
+        when(taxPolicy.calculateTax(ProductType.FOOD, new Money(10) ))
+                .thenReturn(new Tax(new Money(10), "10%" ));
+
+        ProductData productData = mock(ProductData.class);
+        when(productData.getType()).thenReturn(ProductType.FOOD);
+
+        RequestItem requestItem = new RequestItem(productData, 5, new Money(10));
+        invoiceRequest.add(requestItem);
+
+        Invoice invoiceResult = bookKeeper.issuance(invoiceRequest, taxPolicy);
+
+        verify(productData, times(1)).getType();
+    }
 }
