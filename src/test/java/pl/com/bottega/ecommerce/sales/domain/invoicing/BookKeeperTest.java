@@ -58,4 +58,26 @@ public class BookKeeperTest {
 
         verify(taxPolicy, times(2)).calculateTax(ProductType.STANDARD, new Money(10));
     }
+
+    @Test public void testShouldReturnClientNamePeterId28() {
+        Id id = new Id("28");
+        ClientData client = new ClientData(id, "Peter");
+        InvoiceRequest invoiceRequest = new InvoiceRequest(client);
+        BookKeeper bookKeeper = new BookKeeper(new InvoiceFactory());
+
+        TaxPolicy taxPolicy = mock(TaxPolicy.class);
+        when(taxPolicy.calculateTax(ProductType.FOOD, new Money(20) ))
+                .thenReturn(new Tax(new Money(20), "10%" ));
+
+        ProductData productData = mock(ProductData.class);
+        when(productData.getType()).thenReturn(ProductType.FOOD);
+
+        RequestItem requestItem = new RequestItem(productData, 5, new Money(20));
+        invoiceRequest.add(requestItem);
+
+        Invoice invoiceResult = bookKeeper.issuance(invoiceRequest, taxPolicy);
+
+        assertThat(invoiceResult.getClient().getName(), org.hamcrest.Matchers.is("Peter"));
+        assertThat(invoiceResult.getClient().getAggregateId().getId(), is("28"));
+    }
 }
