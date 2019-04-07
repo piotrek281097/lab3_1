@@ -57,4 +57,27 @@ public class AddProductCommandHandlerTest {
 
         assertThat(reservation.getStatus(), Matchers.is(Reservation.ReservationStatus.OPENED));
     }
+
+    @Test public void testShouldReturnOneAsId() {
+
+        AddProductCommand addProductCommand = new AddProductCommand(new Id("1"), new Id("2"), 5);
+
+        Product product = new Product(new Id("2"), new Money(10), "Bread",
+                ProductType.FOOD);
+
+        when(reservation.getClientData()).thenReturn(new ClientData(new Id("1"), "Piotrek"));
+        when(reservation.getCreateDate()).thenReturn(new Date());
+        when(reservation.getStatus()).thenReturn(Reservation.ReservationStatus.OPENED);
+
+
+        Whitebox.setInternalState(addProductCommandHandler, "reservationRepository", reservationRepository);
+        when(reservationRepository.load(any(Id.class))).thenReturn(reservation);
+
+        Whitebox.setInternalState(addProductCommandHandler, "productRepository", productRepository);
+        when(productRepository.load(any(Id.class))).thenReturn(product);
+
+        addProductCommandHandler.handle(addProductCommand);
+
+        assertThat(reservation.getClientData().getAggregateId(), Matchers.is(new Id("1")));
+    }
 }
