@@ -14,6 +14,7 @@ import pl.com.bottega.ecommerce.sales.domain.reservation.Reservation;
 import pl.com.bottega.ecommerce.sales.domain.reservation.ReservationRepository;
 import pl.com.bottega.ecommerce.sharedkernel.Money;
 
+import java.time.LocalDate;
 import java.util.Date;
 
 import static org.junit.Assert.*;
@@ -23,28 +24,24 @@ import static org.mockito.Mockito.*;
 public class AddProductCommandHandlerTest {
 
     private AddProductCommandHandler addProductCommandHandler;
-    private Reservation reservation;
     private ReservationRepository reservationRepository;
     private ProductRepository productRepository;
 
     @Before public void setup() {
         addProductCommandHandler = new AddProductCommandHandler();
-        reservation = mock(Reservation.class);
         reservationRepository = mock(ReservationRepository.class);
         productRepository = mock(ProductRepository.class);
     }
 
-    @Test public void testShouldReturnReservationStatusAsOpened() {
+    @Test public void testShouldReturnNull() {
 
         AddProductCommand addProductCommand = new AddProductCommand(new Id("1"), new Id("2"), 5);
 
         Product product = new Product(new Id("2"), new Money(10), "Bread",
                 ProductType.FOOD);
 
-        when(reservation.getClientData()).thenReturn(new ClientData(new Id("1"), "Piotrek"));
-        when(reservation.getCreateDate()).thenReturn(new Date());
-        when(reservation.getStatus()).thenReturn(Reservation.ReservationStatus.OPENED);
-
+        Reservation reservation = new Reservation(Id.generate(), Reservation.ReservationStatus.OPENED,
+                new ClientData(Id.generate(), "Piotr"), new Date());
 
         Whitebox.setInternalState(addProductCommandHandler, "reservationRepository", reservationRepository);
         when(reservationRepository.load(any(Id.class))).thenReturn(reservation);
@@ -52,32 +49,7 @@ public class AddProductCommandHandlerTest {
         Whitebox.setInternalState(addProductCommandHandler, "productRepository", productRepository);
         when(productRepository.load(any(Id.class))).thenReturn(product);
 
-        addProductCommandHandler.handle(addProductCommand);
-
-        assertThat(reservation.getStatus(), Matchers.is(Reservation.ReservationStatus.OPENED));
-    }
-
-    @Test public void testShouldReturnOneAsId() {
-
-        AddProductCommand addProductCommand = new AddProductCommand(new Id("1"), new Id("2"), 5);
-
-        Product product = new Product(new Id("2"), new Money(10), "Bread",
-                ProductType.FOOD);
-
-        when(reservation.getClientData()).thenReturn(new ClientData(new Id("1"), "Piotrek"));
-        when(reservation.getCreateDate()).thenReturn(new Date());
-        when(reservation.getStatus()).thenReturn(Reservation.ReservationStatus.OPENED);
-
-
-        Whitebox.setInternalState(addProductCommandHandler, "reservationRepository", reservationRepository);
-        when(reservationRepository.load(any(Id.class))).thenReturn(reservation);
-
-        Whitebox.setInternalState(addProductCommandHandler, "productRepository", productRepository);
-        when(productRepository.load(any(Id.class))).thenReturn(product);
-
-        addProductCommandHandler.handle(addProductCommand);
-
-        assertThat(reservation.getClientData().getAggregateId(), Matchers.is(new Id("1")));
+        assertThat(addProductCommandHandler.handle(addProductCommand), Matchers.equalTo(null));
     }
 
     @Test public void testShouldReturnThatMethodAddWasCalledTwice() {
@@ -88,9 +60,8 @@ public class AddProductCommandHandlerTest {
         Product product = new Product(new Id("2"), new Money(10), "Bread",
                 ProductType.FOOD);
 
-        when(reservation.getClientData()).thenReturn(new ClientData(new Id("1"), "Piotrek"));
-        when(reservation.getCreateDate()).thenReturn(new Date());
-        when(reservation.getStatus()).thenReturn(Reservation.ReservationStatus.OPENED);
+        Reservation reservation = new Reservation(Id.generate(), Reservation.ReservationStatus.OPENED,
+                new ClientData(Id.generate(), "Piotr"), new Date());
 
 
         Whitebox.setInternalState(addProductCommandHandler, "reservationRepository", reservationRepository);
@@ -102,7 +73,7 @@ public class AddProductCommandHandlerTest {
         addProductCommandHandler.handle(addProductCommand);
         addProductCommandHandler.handle(addProductCommand2);
 
-        verify(reservation, times(2)).add(product, 5);
+        verify(reservationRepository, times(2)).save(reservation);
     }
 
     @Test public void testShouldReturnThatReservationRepositoryMethodsLoadAndSaveWereCalledOnce() {
@@ -112,9 +83,8 @@ public class AddProductCommandHandlerTest {
         Product product = new Product(new Id("2"), new Money(10), "Bread",
                 ProductType.FOOD);
 
-        when(reservation.getClientData()).thenReturn(new ClientData(new Id("1"), "Piotrek"));
-        when(reservation.getCreateDate()).thenReturn(new Date());
-        when(reservation.getStatus()).thenReturn(Reservation.ReservationStatus.OPENED);
+        Reservation reservation = new Reservation(Id.generate(), Reservation.ReservationStatus.OPENED,
+                new ClientData(Id.generate(), "Piotr"), new Date());
 
 
         Whitebox.setInternalState(addProductCommandHandler, "reservationRepository", reservationRepository);
@@ -129,27 +99,4 @@ public class AddProductCommandHandlerTest {
         verify(reservationRepository, times(1)).save(reservation);
     }
 
-    @Test public void testShouldReturnThatProductRepositoryMethodLoadWasCalledTwice() {
-
-        AddProductCommand addProductCommand = new AddProductCommand(new Id("2"), new Id("2"), 10);
-
-        Product product = new Product(new Id("2"), new Money(10), "Bread",
-                ProductType.STANDARD);
-
-        when(reservation.getClientData()).thenReturn(new ClientData(new Id("2"), "Piotr"));
-        when(reservation.getCreateDate()).thenReturn(new Date());
-        when(reservation.getStatus()).thenReturn(Reservation.ReservationStatus.OPENED);
-
-
-        Whitebox.setInternalState(addProductCommandHandler, "reservationRepository", reservationRepository);
-        when(reservationRepository.load(any(Id.class))).thenReturn(reservation);
-
-        Whitebox.setInternalState(addProductCommandHandler, "productRepository", productRepository);
-        when(productRepository.load(any(Id.class))).thenReturn(product);
-
-        addProductCommandHandler.handle(addProductCommand);
-        addProductCommandHandler.handle(addProductCommand);
-
-        verify(reservationRepository, times(2)).load(new Id("2"));
-    }
 }
