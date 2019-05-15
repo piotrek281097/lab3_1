@@ -1,5 +1,6 @@
 package pl.com.bottega.ecommerce.sales.domain.invoicing;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Matchers;
 import org.mockito.Mock;
@@ -17,13 +18,22 @@ import static org.mockito.Mockito.*;
 
 public class BookKeeperTest {
 
-    @Test public void testRequestInvoiceOnePositionShouldReturnOne() {
-        Id id = new Id("1");
-        ClientData client = new ClientData(id, "Piotrek");
-        InvoiceRequest invoiceRequest = new InvoiceRequest(client);
-        BookKeeper bookKeeper = new BookKeeper(new InvoiceFactory());
+    private Id id;
+    private ClientData client;
+    private InvoiceRequest invoiceRequest;
+    private BookKeeper bookKeeper;
+    private TaxPolicy taxPolicy;
 
-        TaxPolicy taxPolicy = mock(TaxPolicy.class);
+    @Before public void setup() {
+        id = new Id("1");
+        client = new ClientData(id, "Piotrek");
+        invoiceRequest = new InvoiceRequest(client);
+        bookKeeper = new BookKeeper(new InvoiceFactory());
+        taxPolicy = mock(TaxPolicy.class);
+    }
+
+    @Test public void testRequestInvoiceOnePositionShouldReturnOne() {
+
         when(taxPolicy.calculateTax(ProductType.FOOD, new Money(10))).thenReturn(new Tax(new Money(10), "5%"));
 
         ProductData productData = mock(ProductData.class);
@@ -38,12 +48,7 @@ public class BookKeeperTest {
     }
 
     @Test public void testCalculateTaxShouldBeCalledTwoTimes() {
-        Id id = new Id("2");
-        ClientData client = new ClientData(id, "Piotr");
-        InvoiceRequest invoiceRequest = new InvoiceRequest(client);
-        BookKeeper bookKeeper = new BookKeeper(new InvoiceFactory());
 
-        TaxPolicy taxPolicy = mock(TaxPolicy.class);
         when(taxPolicy.calculateTax(ProductType.STANDARD, new Money(10) ))
                 .thenReturn(new Tax(new Money(10), "10%" ));
 
@@ -59,13 +64,8 @@ public class BookKeeperTest {
         verify(taxPolicy, times(2)).calculateTax(ProductType.STANDARD, new Money(10));
     }
 
-    @Test public void testShouldReturnClientNamePeterId28() {
-        Id id = new Id("28");
-        ClientData client = new ClientData(id, "Peter");
-        InvoiceRequest invoiceRequest = new InvoiceRequest(client);
-        BookKeeper bookKeeper = new BookKeeper(new InvoiceFactory());
+    @Test public void testShouldReturnClientName() {
 
-        TaxPolicy taxPolicy = mock(TaxPolicy.class);
         when(taxPolicy.calculateTax(ProductType.FOOD, new Money(20) ))
                 .thenReturn(new Tax(new Money(20), "10%" ));
 
@@ -77,17 +77,11 @@ public class BookKeeperTest {
 
         Invoice invoiceResult = bookKeeper.issuance(invoiceRequest, taxPolicy);
 
-        assertThat(invoiceResult.getClient().getName(), org.hamcrest.Matchers.is("Peter"));
-        assertThat(invoiceResult.getClient().getAggregateId().getId(), is("28"));
+        assertThat(invoiceResult.getClient().getName(), org.hamcrest.Matchers.is("Piotrek"));
     }
 
     @Test public void testShouldReturnDrugAsProductTypeOfSecondItem() {
-        Id id = new Id("1");
-        ClientData client = new ClientData(id, "Piotrek");
-        InvoiceRequest invoiceRequest = new InvoiceRequest(client);
-        BookKeeper bookKeeper = new BookKeeper(new InvoiceFactory());
 
-        TaxPolicy taxPolicy = mock(TaxPolicy.class);
         when(taxPolicy.calculateTax(ProductType.DRUG, new Money(10) ))
                 .thenReturn(new Tax(new Money(10), "10%" ));
 
@@ -105,12 +99,7 @@ public class BookKeeperTest {
     }
 
     @Test public void testCalculateTaxBeCalledZeroTimes() {
-        Id id = new Id("1");
-        ClientData client = new ClientData(id, "Piotr");
-        InvoiceRequest invoiceRequest = new InvoiceRequest(client);
-        BookKeeper bookKeeper = new BookKeeper(new InvoiceFactory());
 
-        TaxPolicy taxPolicy = mock(TaxPolicy.class);
         when(taxPolicy.calculateTax(ProductType.FOOD, new Money(10) ))
                 .thenReturn(new Tax(new Money(10), "10%" ));
 
@@ -123,12 +112,7 @@ public class BookKeeperTest {
     }
 
     @Test public void testProductDataGetTypeShouldBeCalledOnce() {
-        Id id = new Id("1");
-        ClientData client = new ClientData(id, "Piotrek");
-        InvoiceRequest invoiceRequest = new InvoiceRequest(client);
-        BookKeeper bookKeeper = new BookKeeper(new InvoiceFactory());
 
-        TaxPolicy taxPolicy = mock(TaxPolicy.class);
         when(taxPolicy.calculateTax(ProductType.FOOD, new Money(10) ))
                 .thenReturn(new Tax(new Money(10), "10%" ));
 
